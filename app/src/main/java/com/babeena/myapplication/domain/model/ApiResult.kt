@@ -1,6 +1,4 @@
-package com.babeena.myapplication.data.remote
-
-import com.babeena.myapplication.domain.model.Event
+package com.babeena.myapplication.domain.model
 
 sealed interface ApiResult {
     data object Loading : ApiResult

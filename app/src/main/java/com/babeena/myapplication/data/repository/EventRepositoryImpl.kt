@@ -2,9 +2,9 @@ package com.babeena.myapplication.data.repository
 
 import com.babeena.myapplication.data.local.EventDao
 import com.babeena.myapplication.data.local.EventEntity
-import com.babeena.myapplication.data.remote.ApiResult
+import com.babeena.myapplication.domain.model.ApiResult
 import com.babeena.myapplication.data.remote.EventApiService
-import com.babeena.myapplication.data.remote.EventDetailsResult
+import com.babeena.myapplication.domain.model.EventDetailsResult
 import com.babeena.myapplication.data.remote.EventDto
 import com.babeena.myapplication.domain.model.Event
 import com.babeena.myapplication.domain.repository.EventRepository
@@ -45,9 +45,11 @@ class EventRepositoryImpl @Inject constructor(
             val events = response.mapNotNull { dto ->
                 dto?.toEventOrNull()
             }
-            eventDao.replaceAllEvents(events.map { it.toEntity() })
-            cacheTimestampStore.saveLastFetchTime(System.currentTimeMillis())
-            ApiResult.Success(events)
+            if (events.isNotEmpty()) {
+                eventDao.replaceAllEvents(events.map { it.toEntity() })
+                cacheTimestampStore.saveLastFetchTime(System.currentTimeMillis())
+            }
+           ApiResult.Success(events)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

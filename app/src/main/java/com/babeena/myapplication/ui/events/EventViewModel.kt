@@ -2,7 +2,7 @@ package com.babeena.myapplication.ui.events
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.babeena.myapplication.data.remote.ApiResult
+import com.babeena.myapplication.domain.model.ApiResult
 import com.babeena.myapplication.domain.model.Event
 import com.babeena.myapplication.domain.repository.BookMarkRepository
 import com.babeena.myapplication.domain.repository.EventRepository

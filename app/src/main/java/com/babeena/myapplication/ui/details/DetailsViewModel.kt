@@ -2,7 +2,7 @@ package com.babeena.myapplication.ui.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.babeena.myapplication.data.remote.EventDetailsResult
+import com.babeena.myapplication.domain.model.EventDetailsResult
 import com.babeena.myapplication.domain.repository.EventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
