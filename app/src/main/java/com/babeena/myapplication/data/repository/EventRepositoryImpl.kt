@@ -8,6 +8,7 @@ import com.babeena.myapplication.data.remote.EventDetailsResult
 import com.babeena.myapplication.data.remote.EventDto
 import com.babeena.myapplication.domain.model.Event
 import com.babeena.myapplication.domain.repository.EventRepository
+import com.babeena.myapplication.utils.CacheTimestampStore
 import com.google.gson.JsonElement
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
@@ -17,10 +18,23 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class EventRepositoryImpl @Inject constructor(
     private val eventApiService: EventApiService,
-    val eventDao: EventDao,): EventRepository {
+    val eventDao: EventDao,
+    private val cacheTimestampStore: CacheTimestampStore,
+) : EventRepository {
 
     override suspend fun getAllEvents(): ApiResult {
+        val cacheAge = System.currentTimeMillis() -
+                cacheTimestampStore.getLastFetchTime()
 
+        val cacheIsFresh = cacheTimestampStore.getLastFetchTime() > 0L &&
+                cacheAge < TimeUnit.MINUTES.toMillis(5)
+
+        if (cacheIsFresh) {
+            val cachedEvents = eventDao.getAllEvents().first()
+            if (cachedEvents.isNotEmpty()) {
+                return ApiResult.Success(cachedEvents.map { it.toEvent() })
+            }
+        }
         return try {
             val response = eventApiService.getAllEvents() ?: return ApiResult.Success(null)
 
@@ -29,6 +43,9 @@ class EventRepositoryImpl @Inject constructor(
             }
             eventDao.replaceAllEvents(
                 events.map { it.toEntity() }
+            )
+            cacheTimestampStore.saveLastFetchTime(
+                System.currentTimeMillis()
             )
             ApiResult.Success(events)
 
@@ -43,7 +60,11 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getEventDetails(id: String): EventDetailsResult {
+        val cachedEvent = eventDao.getEventById(id)
 
+        if (cachedEvent != null) {
+            return EventDetailsResult.Success(cachedEvent.toEvent())
+        }
         return try {
             val eventDto = eventApiService.getEventDetails(id)
             val event = eventDto?.toEventOrNull()
@@ -52,7 +73,6 @@ class EventRepositoryImpl @Inject constructor(
             } else {
                 EventDetailsResult.Failure("Event details not available")
             }
-
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -63,6 +83,7 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     private fun EventDto.toEventOrNull(): Event? {
+
         val eventId = id.toSafeString() ?: return null
         val eventTitle = title
             ?.takeIf { it.isNotBlank() }
@@ -105,7 +126,6 @@ class EventRepositoryImpl @Inject constructor(
 
     private fun JsonElement?.toSafeString(): String? {
         if (this == null || isJsonNull) return null
-
         return runCatching {
             if (isJsonPrimitive) {
                 asString.takeIf { it.isNotBlank() }
@@ -117,7 +137,6 @@ class EventRepositoryImpl @Inject constructor(
 
     private fun JsonElement?.toSafeDouble(): Double? {
         if (this == null || isJsonNull) return null
-
         return runCatching {
             if (isJsonPrimitive) {
                 asString.toDoubleOrNull()
