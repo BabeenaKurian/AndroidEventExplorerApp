@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
@@ -59,6 +61,7 @@ fun eventScreen(
 
     val eventUiState by viewModel.eventUiState.collectAsStateWithLifecycle()
     val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
+    val bookmarkedEventIds by viewModel.bookmarkedEventIds.collectAsStateWithLifecycle()
 
     val context = LocalContext.current
 
@@ -219,6 +222,26 @@ fun eventScreen(
                                                         style = MaterialTheme.typography.titleLarge,
                                                         color = MaterialTheme.colorScheme.onSurface
                                                     )
+
+                                                    IconButton(
+                                                        onClick = {
+                                                            viewModel.toggleBookmark(event)
+                                                        }
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = if (event.id in bookmarkedEventIds) {
+                                                                Icons.Default.Bookmark
+                                                            } else {
+                                                                Icons.Default.BookmarkBorder
+                                                            },
+                                                            contentDescription = if (event.id in bookmarkedEventIds) {
+                                                                "Remove bookmark"
+                                                            } else {
+                                                                "Add bookmark"
+                                                            },
+                                                            tint = primaryRed
+                                                        )
+                                                    }
 
                                                 }
                                                 Row(

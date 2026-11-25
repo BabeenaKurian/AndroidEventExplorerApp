@@ -3,6 +3,8 @@ package com.babeena.myapplication.ui.events
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.babeena.myapplication.data.remote.ApiResult
+import com.babeena.myapplication.domain.model.Event
+import com.babeena.myapplication.domain.repository.BookMarkRepository
 import com.babeena.myapplication.domain.repository.EventRepository
 import com.babeena.myapplication.utils.LocationHelper
 import com.babeena.myapplication.utils.UserLocation
@@ -19,8 +21,9 @@ import kotlin.coroutines.cancellation.CancellationException
 class EventViewModel@Inject constructor(
     private val eventRepository: EventRepository,
     private val locationHelper: LocationHelper,
+    private val bookmarkRepository: BookMarkRepository
 
-    ) :ViewModel(){
+) :ViewModel(){
     private val _eventUiState = MutableStateFlow(EventUiState())
 
     var eventUiState: StateFlow<EventUiState> = _eventUiState
@@ -30,6 +33,9 @@ class EventViewModel@Inject constructor(
 
     val userLocation = _userLocation.asStateFlow()
 
+    private val _bookmarkedEventIds = MutableStateFlow<Set<String>>(emptySet())
+
+    val bookmarkedEventIds: StateFlow<Set<String>> = _bookmarkedEventIds.asStateFlow()
 
     fun getAllEvents() {
         viewModelScope.launch {
@@ -71,8 +77,38 @@ class EventViewModel@Inject constructor(
         }
     }
 
+
+    private fun observeBookmarks() {
+        viewModelScope.launch {
+            bookmarkRepository.getAllBookMarkedItems().collect { bookmark ->
+                _bookmarkedEventIds.value = bookmark.map { it.id }.toSet()
+            }
+        }
+    }
+
+    fun toggleBookmark(event: Event) {
+        if (event.id in _bookmarkedEventIds.value) {
+            removeBookmark(event.id)
+        } else {
+            addBookmark(event)
+        }
+    }
+
+    fun addBookmark(event: Event) {
+        viewModelScope.launch {
+            bookmarkRepository.addBookMarkedItem(event)
+        }
+    }
+
+    fun removeBookmark(eventId: String) {
+        viewModelScope.launch {
+            bookmarkRepository.removeBookMarkedEvent(eventId)
+        }
+    }
+
     init {
         getAllEvents()
+        observeBookmarks()
     }
 
 
