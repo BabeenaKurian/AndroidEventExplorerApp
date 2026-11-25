@@ -1,7 +1,11 @@
 package com.babeena.myapplication.ui.events
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,16 +35,20 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.babeena.myapplication.ui.theme.primaryRed
+import com.babeena.myapplication.utils.DistanceUtils
 import com.babeena.myapplication.utils.EventDateUtils.formatEventDate
 
 @Composable
@@ -49,8 +57,47 @@ fun eventScreen(
 ) {
 
     val eventUiState by viewModel.eventUiState.collectAsStateWithLifecycle()
+    val userLocation by viewModel.userLocation.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
 
+    val permissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+
+            val granted =
+                permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                        permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+            if (granted) {
+                viewModel.fetchUserLocation()
+            }
+        }
+
+    LaunchedEffect(Unit) {
+
+        val hasLocationPermission =
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+
+        if (hasLocationPermission) {
+            viewModel.fetchUserLocation()
+        } else {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
     Scaffold(
         contentWindowInsets = WindowInsets.safeDrawing
     ) { innerPadding ->
@@ -106,6 +153,21 @@ fun eventScreen(
                                         items = events,
                                         key = { event -> event.id })
                                     { event ->
+
+                                        val distanceInKm = if (
+                                            userLocation != null &&
+                                            event.latitude != null &&
+                                            event.longitude != null
+                                        ) {
+                                            DistanceUtils.calculateDistanceInKm(
+                                                userLatitude = userLocation!!.userLatitude,
+                                                userLongitude = userLocation!!.userLongitude,
+                                                eventLatitude = event.latitude,
+                                                eventLongitude = event.longitude
+                                            )
+                                        } else {
+                                            null
+                                        }
                                         Card(
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -148,7 +210,7 @@ fun eventScreen(
                                                     horizontalArrangement = Arrangement.SpaceBetween
                                                 ) {
                                                     Text(
-                                                        text = event.title ?: "Untitled",
+                                                        text = event.title,
                                                         modifier = Modifier.weight(1f),
                                                         style = MaterialTheme.typography.titleLarge,
                                                         color = MaterialTheme.colorScheme.onSurface
@@ -194,7 +256,8 @@ fun eventScreen(
                                                         )
 
                                                     Text(
-                                                        text = event.location ?: "Location not available",
+                                                        text = event.location
+                                                            ?: "Location not available",
                                                         modifier = Modifier.padding(
                                                             start = 8.dp
                                                         ),
@@ -203,6 +266,40 @@ fun eventScreen(
                                                         color = MaterialTheme.colorScheme
                                                             .onSurfaceVariant
                                                     )
+                                                }
+                                                if (distanceInKm != null) {
+                                                    Text(
+                                                        text = String.format(
+                                                            java.util.Locale.getDefault(),
+                                                            "%.1f km away",
+                                                            distanceInKm
+                                                        ),
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                                if (event.latitude != null && event.longitude != null) {
+                                                    Button(
+                                                        onClick = {
+                                                            val mapUri = Uri.parse(
+                                                                "geo:${event.latitude},${event.longitude}?q=${event.latitude},${event.longitude}(${
+                                                                    Uri.encode(
+                                                                        event.title
+                                                                    )
+                                                                })"
+                                                            )
+                                                            val mapIntent =
+                                                                Intent(Intent.ACTION_VIEW, mapUri)
+                                                            context.startActivity(mapIntent)
+                                                        },
+                                                        modifier = Modifier.fillMaxWidth(),
+                                                        colors = ButtonDefaults.buttonColors(
+                                                            containerColor = Color(0xFFE41B1F),
+                                                            contentColor = Color.White
+                                                        )
+                                                    ) {
+                                                        Text("Open in Maps")
+                                                    }
                                                 }
 
                                                 event.description?.let {

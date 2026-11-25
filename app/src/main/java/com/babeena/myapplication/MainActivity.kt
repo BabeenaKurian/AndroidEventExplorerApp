@@ -15,7 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.babeena.myapplication.ui.events.EventViewModel
 import com.babeena.myapplication.ui.events.eventScreen
 import com.babeena.myapplication.ui.theme.MyApplicationTheme
+import dagger.hilt.EntryPoint
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     val viewModel: EventViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
