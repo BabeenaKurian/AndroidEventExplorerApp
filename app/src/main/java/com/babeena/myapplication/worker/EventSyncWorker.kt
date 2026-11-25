@@ -1,6 +1,8 @@
 package com.babeena.myapplication.worker
 
 import android.content.Context
+import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
@@ -10,7 +12,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlin.coroutines.cancellation.CancellationException
 
-
+@HiltWorker
 class EventSyncWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
@@ -19,11 +21,16 @@ class EventSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            Log.d("EventSyncWorker", "Worker started")
+
             eventRepository.syncEvents()
+            Log.d("EventSyncWorker", "Sync successful")
             Result.success()
+
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            Log.e("EventSyncWorker", "Sync failed", e)
             Result.retry()
         }
     }
