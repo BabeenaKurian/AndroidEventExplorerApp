@@ -5,9 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface BookMarkRepository {
     suspend fun addBookMarkedItem(event: Event)
-
     fun getAllBookMarkedItems(): Flow<List<Event>>
-
     suspend fun removeBookMarkedEvent(id: String)
 
 }

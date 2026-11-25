@@ -7,8 +7,7 @@ import javax.inject.Inject
 
 class CacheTimestampStore @Inject constructor(@ApplicationContext context: Context) {
     private val preferences = context.getSharedPreferences(
-        "event_cache_preferences",
-        Context.MODE_PRIVATE
+        PREFERENCE_NAME, Context.MODE_PRIVATE
     )
 
     fun getLastFetchTime(): Long {
@@ -16,12 +15,11 @@ class CacheTimestampStore @Inject constructor(@ApplicationContext context: Conte
     }
 
     fun saveLastFetchTime(timestamp: Long) {
-        preferences.edit()
-            .putLong(KEY_LAST_FETCH_TIME, timestamp)
-            .apply()
+        preferences.edit().putLong(KEY_LAST_FETCH_TIME, timestamp).apply()
     }
 
     companion object {
+        private const val PREFERENCE_NAME = "event_cache_preferences"
         private const val KEY_LAST_FETCH_TIME = "last_fetch_time"
     }
 

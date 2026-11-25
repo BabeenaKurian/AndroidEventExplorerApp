@@ -18,7 +18,6 @@ class DistanceUtilsTest {
             eventLatitude = 43.6532,
             eventLongitude = -79.3832
         )
-
         Assert.assertNotNull(distance)
         Assert.assertEquals(0.0, distance)
     }
@@ -31,7 +30,6 @@ class DistanceUtilsTest {
             eventLatitude = 43.7000,
             eventLongitude = -79.4000
         )
-
         Assert.assertNotNull(distance)
         Assert.assertEquals(true, distance!! > 0.0)
     }

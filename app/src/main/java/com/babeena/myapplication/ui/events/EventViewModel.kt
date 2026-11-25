@@ -18,44 +18,37 @@ import kotlin.coroutines.cancellation.CancellationException
 
 
 @HiltViewModel
-class EventViewModel@Inject constructor(
+class EventViewModel @Inject constructor(
     private val eventRepository: EventRepository,
     private val locationHelper: LocationHelper,
     private val bookmarkRepository: BookMarkRepository
-
-) :ViewModel(){
+) : ViewModel() {
     private val _eventUiState = MutableStateFlow(EventUiState())
-
-    var eventUiState: StateFlow<EventUiState> = _eventUiState
-
-    private val _userLocation =
-        MutableStateFlow<UserLocation?>(null)
-
-    val userLocation = _userLocation.asStateFlow()
-
+    val eventUiState: StateFlow<EventUiState> = _eventUiState.asStateFlow()
+    private val _userLocation = MutableStateFlow<UserLocation?>(null)
+    val userLocation: StateFlow<UserLocation?> = _userLocation.asStateFlow()
     private val _bookmarkedEventIds = MutableStateFlow<Set<String>>(emptySet())
-
     val bookmarkedEventIds: StateFlow<Set<String>> = _bookmarkedEventIds.asStateFlow()
-
     fun getAllEvents() {
         viewModelScope.launch {
             _eventUiState.value = _eventUiState.value.copy(
-                isLoading = true,
-                errorMessage = null
+                isLoading = true, errorMessage = null
             )
             try {
                 when (val result = eventRepository.getAllEvents()) {
+                    is ApiResult.Loading -> {
+                        _eventUiState.value = _eventUiState.value.copy(
+                            isLoading = true, errorMessage = null
+                        )
+                    }
                     is ApiResult.Success -> {
                         _eventUiState.value = _eventUiState.value.copy(
-                            isLoading = false,
-                            data = result.data.orEmpty(),
-                            errorMessage = null
+                            isLoading = false, data = result.data, errorMessage = null
                         )
                     }
                     is ApiResult.Failure -> {
                         _eventUiState.value = _eventUiState.value.copy(
-                            isLoading = false,
-                            errorMessage = result.errorMessage
+                            isLoading = false, errorMessage = result.errorMessage
                         )
                     }
                 }
@@ -63,8 +56,7 @@ class EventViewModel@Inject constructor(
                 throw e
             } catch (e: Exception) {
                 _eventUiState.value = _eventUiState.value.copy(
-                    isLoading = false,
-                    errorMessage = e.message ?: "Unable to load events"
+                    isLoading = false, errorMessage = e.message ?: LOAD_EVENTS_ERROR
                 )
             }
         }
@@ -72,11 +64,15 @@ class EventViewModel@Inject constructor(
 
     fun fetchUserLocation() {
         viewModelScope.launch {
-            _userLocation.value =
-                locationHelper.getCurrentLocation()
+            try {
+                _userLocation.value = locationHelper.getCurrentLocation()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _userLocation.value = null
+            }
         }
     }
-
 
     private fun observeBookmarks() {
         viewModelScope.launch {
@@ -111,5 +107,7 @@ class EventViewModel@Inject constructor(
         observeBookmarks()
     }
 
-
+    companion object {
+        private const val LOAD_EVENTS_ERROR = "Unable to load events"
+    }
 }

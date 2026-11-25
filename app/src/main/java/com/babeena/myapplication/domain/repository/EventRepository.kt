@@ -5,9 +5,7 @@ import com.babeena.myapplication.data.remote.EventDetailsResult
 
 interface EventRepository {
     suspend fun getAllEvents(): ApiResult
-
     suspend fun getEventDetails(id: String): EventDetailsResult
-
     suspend fun syncEvents()
 
 

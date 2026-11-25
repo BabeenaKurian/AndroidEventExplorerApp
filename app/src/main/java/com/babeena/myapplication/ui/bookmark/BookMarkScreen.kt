@@ -26,20 +26,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.babeena.myapplication.R
 import com.babeena.myapplication.ui.theme.primaryRed
 
 
 @Composable
 fun bookMarkScreen(
-    viewModel: BookMarkViewModel,
-    onEventClick: (String) -> Unit,
-    onBackClick: () -> Unit
+    viewModel: BookMarkViewModel, onEventClick: (String) -> Unit, onBackClick: () -> Unit
 ) {
-
     val bookMarkedItem by viewModel.bookmarkedEvents.collectAsStateWithLifecycle()
-
     Scaffold { innerPadding ->
         Column(
             modifier = Modifier
@@ -50,15 +48,13 @@ fun bookMarkScreen(
             IconButton(onClick = onBackClick) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back to events"
+                    contentDescription = stringResource(R.string.back_to_events)
                 )
             }
-
             Text(
-                text = "Bookmarked Events",
+                text = stringResource(R.string.bookmarked_events_title),
                 style = MaterialTheme.typography.titleLarge
             )
-
             if (bookMarkedItem.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -67,7 +63,7 @@ fun bookMarkScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No bookmarked events yet.",
+                        text = stringResource(R.string.no_bookmarked_events),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -77,9 +73,7 @@ fun bookMarkScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(
-                        items = bookMarkedItem,
-                        key = { event -> event.id }
-                    ) { event ->
+                        items = bookMarkedItem, key = { event -> event.id }) { event ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -88,8 +82,7 @@ fun bookMarkScreen(
                                 },
                             shape = RoundedCornerShape(20.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor =
-                                    MaterialTheme.colorScheme.surface
+                                containerColor = MaterialTheme.colorScheme.surface
                             ),
                             elevation = CardDefaults.cardElevation(
                                 defaultElevation = 3.dp
@@ -109,23 +102,19 @@ fun bookMarkScreen(
                                         text = event.title,
                                         style = MaterialTheme.typography.titleMedium
                                     )
-
                                     event.location?.let {
                                         Text(
-                                            text = it,
-                                            style = MaterialTheme.typography.bodyMedium
+                                            text = it, style = MaterialTheme.typography.bodyMedium
                                         )
                                     }
                                 }
-
                                 IconButton(
                                     onClick = {
                                         viewModel.removeBookmark(event.id)
-                                    }
-                                ) {
+                                    }) {
                                     Icon(
                                         imageVector = Icons.Default.BookmarkRemove,
-                                        contentDescription = "Remove bookmark",
+                                        contentDescription = stringResource(R.string.remove_bookmark),
                                         tint = primaryRed
                                     )
                                 }

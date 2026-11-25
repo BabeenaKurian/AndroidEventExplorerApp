@@ -13,7 +13,6 @@ import javax.inject.Inject
 class BookmarkRepositoryIml @Inject constructor(private val bookMarkDao: BookMarkDao) :
     BookMarkRepository {
 
-
     override suspend fun addBookMarkedItem(event: Event) {
         bookMarkDao.insert(event.toEntity())
     }

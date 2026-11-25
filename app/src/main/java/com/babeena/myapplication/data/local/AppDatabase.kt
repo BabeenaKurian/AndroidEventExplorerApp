@@ -13,11 +13,6 @@ import androidx.room.RoomDatabase
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
-
     abstract fun eventDao(): EventDao
-
     abstract fun bookmarkDao(): BookMarkDao
-
-
-
 }

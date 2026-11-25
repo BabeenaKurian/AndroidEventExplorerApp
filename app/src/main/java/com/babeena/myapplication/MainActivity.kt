@@ -27,20 +27,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         //testEventSync()
-
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
                 navGraph()
-                }
             }
         }
- /*   private fun testEventSync() {
-        val request = OneTimeWorkRequestBuilder<EventSyncWorker>()
-            .build()
-
-        WorkManager.getInstance(applicationContext)
-            .enqueue(request)
-    }*/
-    }
+    }/*   private fun testEventSync() {
+           val request = OneTimeWorkRequestBuilder<EventSyncWorker>()
+               .build()
+           WorkManager.getInstance(applicationContext)
+               .enqueue(request)
+       }*/
+}
 

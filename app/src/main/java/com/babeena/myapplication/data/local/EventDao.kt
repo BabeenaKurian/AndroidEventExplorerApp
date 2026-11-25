@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EventDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvents(event: List<EventEntity>)
 
@@ -28,5 +27,4 @@ interface EventDao {
         deleteAllEvents()
         insertEvents(events)
     }
-
 }

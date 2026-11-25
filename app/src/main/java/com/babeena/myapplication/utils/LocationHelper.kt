@@ -17,15 +17,13 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.CancellationException
 
 data class UserLocation(
-    val userLatitude: Double,
-    val userLongitude: Double
+    val userLatitude: Double, val userLongitude: Double
 )
 
 class LocationHelper @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     suspend fun getCurrentLocation(): UserLocation? {
-
         if (!checkLocationPermission()) {
             return null
         }
@@ -33,8 +31,7 @@ class LocationHelper @Inject constructor(
             val location = getCurrentLocationFromProvider()
             location?.let {
                 UserLocation(
-                    userLatitude = it.latitude,
-                    userLongitude = it.longitude
+                    userLatitude = it.latitude, userLongitude = it.longitude
                 )
             }
         } catch (e: CancellationException) {
@@ -42,7 +39,6 @@ class LocationHelper @Inject constructor(
         } catch (e: SecurityException) {
             Log.e("LocationHelper", "Location permission error", e)
             null
-
         } catch (e: Exception) {
             Log.e("LocationHelper", "Location retrieval failed", e)
             null
@@ -51,35 +47,23 @@ class LocationHelper @Inject constructor(
 
 
     fun checkLocationPermission(): Boolean {
-        val fineLocationGranted =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-
-        val coarseLocationGranted =
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-
+        val fineLocationGranted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val coarseLocationGranted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
         return fineLocationGranted || coarseLocationGranted
     }
 
 
-
     @SuppressLint("MissingPermission")
     private suspend fun getCurrentLocationFromProvider(): Location? {
-
-        val client =
-            LocationServices.getFusedLocationProviderClient(context)
-
+        val client = LocationServices.getFusedLocationProviderClient(context)
         val lastLocation = client.lastLocation.await()
-
         return lastLocation ?: withTimeout(15_000L) {
             client.getCurrentLocation(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                null
+                Priority.PRIORITY_HIGH_ACCURACY, null
             ).await()
         }
     }

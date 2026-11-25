@@ -21,18 +21,19 @@ class EventSyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
-            Log.d("EventSyncWorker", "Worker started")
-
+            Log.d(TAG, "Worker started")
             eventRepository.syncEvents()
-            Log.d("EventSyncWorker", "Sync successful")
+            Log.d(TAG, "Sync successful")
             Result.success()
-
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Log.e("EventSyncWorker", "Sync failed", e)
+            Log.e(TAG, "Sync failed", e)
             Result.retry()
         }
     }
 
+    companion object {
+        private const val TAG = "EventSyncWorker"
+    }
 }

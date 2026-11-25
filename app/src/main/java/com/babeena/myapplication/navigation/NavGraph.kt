@@ -29,22 +29,17 @@ fun navGraph() {
         navController = navController,
         startDestination = "main_graph"
     ) {
-
         // Parent graph
         navigation(
             startDestination = "events",
             route = "main_graph"
         ) {
-
             composable("events") { backStackEntry ->
-
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry("main_graph")
                 }
-
                 val eventViewModel: EventViewModel =
                     hiltViewModel(parentEntry)
-
                 eventScreen(
                     viewModel = eventViewModel,
                     onEventClick = { eventId ->
@@ -54,7 +49,6 @@ fun navGraph() {
                         navController.navigate("bookmarks")
                     })
             }
-
             composable(
                 route = "eventDetails/{eventId}",
                 arguments = listOf(
@@ -63,28 +57,19 @@ fun navGraph() {
                     }
                 )
             ) { backStackEntry ->
-
                 val parentEntry = remember(backStackEntry) {
                     navController.getBackStackEntry("main_graph")
                 }
-
-                val eventViewModel: EventViewModel =
-                    hiltViewModel(parentEntry)
-
-                val userLocation by eventViewModel.userLocation
-                    .collectAsStateWithLifecycle()
-
+                val eventViewModel: EventViewModel = hiltViewModel(parentEntry)
+                val userLocation by eventViewModel.userLocation.collectAsStateWithLifecycle()
                 val detailsViewModel: DetailsViewModel = hiltViewModel()
-
                 val eventId = backStackEntry.arguments
                     ?.getString("eventId")
-
                 LaunchedEffect(eventId) {
                     eventId?.let {
                         detailsViewModel.getEventDetails(it)
                     }
                 }
-
                 detailsScreen(
                     viewModel = detailsViewModel,
                     userLocation = userLocation,
@@ -93,10 +78,8 @@ fun navGraph() {
                     }
                 )
             }
-
             composable("bookmarks") {
                 val viewModel: BookMarkViewModel = hiltViewModel()
-
                 bookMarkScreen(
                     viewModel = viewModel,
                     onEventClick = { eventId ->

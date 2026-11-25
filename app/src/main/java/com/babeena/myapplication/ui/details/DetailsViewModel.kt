@@ -7,6 +7,7 @@ import com.babeena.myapplication.domain.repository.EventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -16,40 +17,38 @@ import kotlin.coroutines.cancellation.CancellationException
 class DetailsViewModel @Inject constructor(private val eventRepository: EventRepository) :
     ViewModel() {
     private val _detailsUiState = MutableStateFlow(DetailsUiState())
-
-    val detailsUiState: StateFlow<DetailsUiState> = _detailsUiState
-
+    val detailsUiState: StateFlow<DetailsUiState> = _detailsUiState.asStateFlow()
     fun getEventDetails(eventId: String) {
         viewModelScope.launch {
             _detailsUiState.value = _detailsUiState.value.copy(
                 isLoading = true,
+                event = null,
                 errorMessage = null
             )
-
             try {
                 when (val result = eventRepository.getEventDetails(eventId)) {
-
+                  is EventDetailsResult.Loading ->{
+                      _detailsUiState.value = _detailsUiState.value.copy(
+                          isLoading = true,
+                          errorMessage = null
+                      )
+                  }
                     is EventDetailsResult.Success -> {
                         _detailsUiState.value = _detailsUiState.value.copy(
-                            isLoading = false,
-                            event = result.data
+                            isLoading = false, event = result.data
                         )
                     }
-
                     is EventDetailsResult.Failure -> {
                         _detailsUiState.value = _detailsUiState.value.copy(
-                            isLoading = false,
-                            errorMessage = result.errorMessage
+                            isLoading = false, errorMessage = result.errorMessage
                         )
                     }
                 }
-
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 _detailsUiState.value = _detailsUiState.value.copy(
-                    isLoading = false,
-                    errorMessage = e.message ?: "Unable to load event details"
+                    isLoading = false, errorMessage = e.message
                 )
             }
         }

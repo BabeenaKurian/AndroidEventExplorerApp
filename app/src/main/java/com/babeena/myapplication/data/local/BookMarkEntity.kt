@@ -7,7 +7,6 @@ import androidx.room.PrimaryKey
 data class BookMarkEntity(
     @PrimaryKey
     val id: String,
-
     val title: String,
     val location: String?,
     val dateTime: String?,

@@ -35,9 +35,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import com.babeena.myapplication.R
 import com.babeena.myapplication.ui.theme.primaryRed
 import com.babeena.myapplication.utils.DistanceUtils
 import com.babeena.myapplication.utils.EventDateUtils.formatEventDate
@@ -46,14 +48,10 @@ import com.babeena.myapplication.utils.UserLocation
 
 @Composable
 fun detailsScreen(
-    viewModel: DetailsViewModel,
-    userLocation: UserLocation?,
-    onBackClick: () -> Unit
+    viewModel: DetailsViewModel, userLocation: UserLocation?, onBackClick: () -> Unit
 ) {
     val detailsUiState by viewModel.detailsUiState.collectAsStateWithLifecycle()
-
     val context = LocalContext.current
-
     Scaffold(
         topBar = {
             Row(
@@ -66,11 +64,11 @@ fun detailsScreen(
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Go back"
+                        contentDescription = stringResource(R.string.go_back)
                     )
                 }
                 Text(
-                    text = "Event Details", style = MaterialTheme.typography.titleLarge
+                    text = stringResource(R.string.event_details_title), style = MaterialTheme.typography.titleLarge
                 )
             }
         }) { innerPadding ->
@@ -85,7 +83,7 @@ fun detailsScreen(
                 ) {
                     CircularProgressIndicator()
                     Spacer(Modifier.height(12.dp))
-                    Text("Loading event details...")
+                    Text(stringResource(R.string.loading))
                 }
             }
 
@@ -99,8 +97,7 @@ fun detailsScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = detailsUiState.errorMessage
-                            ?: "Unable to load event details.",
+                        text = detailsUiState.errorMessage ?: stringResource(R.string.unable_to_load_event_details),
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -110,21 +107,17 @@ fun detailsScreen(
                 if (detailsUiState.event != null) {
                     val event = detailsUiState.event!!
 
-                    val distanceInKm = if (
-                        userLocation != null &&
-                        event.latitude != null &&
-                        event.longitude != null
-                    ) {
-                        DistanceUtils.calculateDistanceInKm(
-                            userLatitude = userLocation.userLatitude,
-                            userLongitude = userLocation.userLongitude,
-                            eventLatitude = event.latitude,
-                            eventLongitude = event.longitude
-                        )
-                    } else {
-                        null
-                    }
-
+                    val distanceInKm =
+                        if (userLocation != null && event.latitude != null && event.longitude != null) {
+                            DistanceUtils.calculateDistanceInKm(
+                                userLatitude = userLocation.userLatitude,
+                                userLongitude = userLocation.userLongitude,
+                                eventLatitude = event.latitude,
+                                eventLongitude = event.longitude
+                            )
+                        } else {
+                            null
+                        }
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -159,11 +152,12 @@ fun detailsScreen(
                             )
 
                             Text(
-                                text = formatEventDate(event.dateTime ?: "Date not available"),
+                                text = formatEventDate(
+                                    event.dateTime ?: stringResource(R.string.date_not_available)
+                                ),
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
-
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -173,19 +167,16 @@ fun detailsScreen(
                                 contentDescription = null,
                                 tint = primaryRed
                             )
-
                             Text(
-                                text = event.location ?: "Location not available",
+                                text = event.location
+                                    ?: stringResource(R.string.location_not_available),
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
-
                         if (distanceInKm != null) {
                             Text(
                                 text = String.format(
-                                    java.util.Locale.getDefault(),
-                                    "%.1f km away",
-                                    distanceInKm
+                                    java.util.Locale.getDefault(), stringResource(R.string.distance_away), distanceInKm
                                 ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary
@@ -201,26 +192,21 @@ fun detailsScreen(
                                             )
                                         })"
                                     )
-                                    val mapIntent =
-                                        Intent(Intent.ACTION_VIEW, mapUri)
+                                    val mapIntent = Intent(Intent.ACTION_VIEW, mapUri)
                                     context.startActivity(mapIntent)
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFFE41B1F),
-                                    contentColor = Color.White
+                                    containerColor = primaryRed, contentColor = Color.White
                                 )
                             ) {
-                                Text("Open in Maps")
+                                Text(stringResource(R.string.open_in_maps))
                             }
                         }
                         HorizontalDivider()
-
                         Text(
-                            text = "About this event",
-                            style = MaterialTheme.typography.titleLarge
+                            text = stringResource(R.string.about_this_event), style = MaterialTheme.typography.titleLarge
                         )
-
                         event.description?.let {
                             Text(
                                 text = it,
@@ -237,9 +223,8 @@ fun detailsScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text("No event details available.")
+                        Text(stringResource(R.string.no_event_details_available))
                     }
-
                 }
             }
         }

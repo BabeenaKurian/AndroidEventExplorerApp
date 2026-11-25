@@ -13,22 +13,19 @@ import com.google.gson.JsonElement
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-import kotlin.compareTo
 import kotlin.coroutines.cancellation.CancellationException
 
 class EventRepositoryImpl @Inject constructor(
     private val eventApiService: EventApiService,
-    val eventDao: EventDao,
+    private val eventDao: EventDao,
     private val cacheTimestampStore: CacheTimestampStore,
 ) : EventRepository {
 
     override suspend fun getAllEvents(): ApiResult {
-        val cacheAge = System.currentTimeMillis() -
-                cacheTimestampStore.getLastFetchTime()
-
-        val cacheIsFresh = cacheTimestampStore.getLastFetchTime() > 0L &&
-                cacheAge < TimeUnit.MINUTES.toMillis(5)
-
+        val lastFetchTime = cacheTimestampStore.getLastFetchTime()
+        val cacheAge = System.currentTimeMillis() - lastFetchTime
+        val cacheIsFresh =
+            lastFetchTime > 0L && cacheAge < TimeUnit.MINUTES.toMillis(CACHE_DURATION_MINUTES)
         if (cacheIsFresh) {
             val cachedEvents = eventDao.getAllEvents().first()
             if (cachedEvents.isNotEmpty()) {
@@ -36,32 +33,35 @@ class EventRepositoryImpl @Inject constructor(
             }
         }
         return try {
-            val response = eventApiService.getAllEvents() ?: return ApiResult.Success(null)
-
+            val response = eventApiService.getAllEvents()
+            if (response == null) {
+                val cachedEvents = eventDao.getAllEvents().first()
+                return if (cachedEvents.isNotEmpty()) {
+                    ApiResult.Success(cachedEvents.map { it.toEvent() })
+                } else {
+                    ApiResult.Failure(EMPTY_RESPONSE_ERROR)
+                }
+            }
             val events = response.mapNotNull { dto ->
                 dto?.toEventOrNull()
             }
-            eventDao.replaceAllEvents(
-                events.map { it.toEntity() }
-            )
-            cacheTimestampStore.saveLastFetchTime(
-                System.currentTimeMillis()
-            )
+            eventDao.replaceAllEvents(events.map { it.toEntity() })
+            cacheTimestampStore.saveLastFetchTime(System.currentTimeMillis())
             ApiResult.Success(events)
-
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             val cachedEvents = eventDao.getAllEvents().first()
             if (cachedEvents.isNotEmpty()) {
                 ApiResult.Success(cachedEvents.map { it.toEvent() })
             } else {
-                ApiResult.Failure(e.message ?: "Unable to load data...")
+                ApiResult.Failure(e.message ?: LOAD_EVENTS_ERROR)
             }
         }
     }
 
     override suspend fun getEventDetails(id: String): EventDetailsResult {
         val cachedEvent = eventDao.getEventById(id)
-
         if (cachedEvent != null) {
             return EventDetailsResult.Success(cachedEvent.toEvent())
         }
@@ -71,40 +71,34 @@ class EventRepositoryImpl @Inject constructor(
             if (event != null) {
                 EventDetailsResult.Success(event)
             } else {
-                EventDetailsResult.Failure("Event details not available")
+                EventDetailsResult.Failure(EMPTY_RESPONSE_ERROR)
             }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             EventDetailsResult.Failure(
-                e.message ?: "Unable to get event details"
+                e.message ?: LOAD_EVENT_DETAILS_ERROR
             )
         }
     }
 
     override suspend fun syncEvents() {
-        val response = eventApiService.getAllEvents()?: return
-
+        val response =
+            eventApiService.getAllEvents() ?: throw IllegalStateException(EMPTY_RESPONSE_ERROR)
         val events = response.mapNotNull { dto ->
             dto?.toEventOrNull()
         }
-
-        eventDao.replaceAllEvents(
-            events.map { it.toEntity() }
-        )
-
-        cacheTimestampStore.saveLastFetchTime(
-            System.currentTimeMillis()
-        )
+        if (response.isNotEmpty() && events.isEmpty()) {
+            throw IllegalStateException(INVALID_EVENTS_ERROR)
+        }
+        eventDao.replaceAllEvents(events.map { it.toEntity() })
+        cacheTimestampStore.saveLastFetchTime(System.currentTimeMillis())
     }
 
     private fun EventDto.toEventOrNull(): Event? {
 
         val eventId = id.toSafeString() ?: return null
-        val eventTitle = title
-            ?.takeIf { it.isNotBlank() }
-            ?: return null
-
+        val eventTitle = title?.takeIf { it.isNotBlank() } ?: return null
         return Event(
             id = eventId,
             title = eventTitle,
@@ -117,17 +111,16 @@ class EventRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun Event.toEntity() =
-        EventEntity(
-            id = id,
-            title = title,
-            location = location,
-            dateTime = dateTime,
-            imageUrl = imageUrl,
-            latitude = latitude,
-            longitude = longitude,
-            description = description
-        )
+    private fun Event.toEntity() = EventEntity(
+        id = id,
+        title = title,
+        location = location,
+        dateTime = dateTime,
+        imageUrl = imageUrl,
+        latitude = latitude,
+        longitude = longitude,
+        description = description
+    )
 
     private fun EventEntity.toEvent() = Event(
         id = id,
@@ -160,5 +153,13 @@ class EventRepositoryImpl @Inject constructor(
                 null
             }
         }.getOrNull()
+    }
+
+    companion object {
+        private const val CACHE_DURATION_MINUTES = 5L
+        private const val EMPTY_RESPONSE_ERROR = "Empty response from server"
+        private const val LOAD_EVENTS_ERROR = "Unable to load data"
+        private const val LOAD_EVENT_DETAILS_ERROR = "Unable to load event details"
+        private const val INVALID_EVENTS_ERROR = "No valid events received from server"
     }
 }

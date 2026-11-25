@@ -1,3 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">My Application</string>
+    <string name="events_list_title">Events List</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="date_not_available">Date not available</string>
+    <string name="location_not_available">Location not available</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="open_in_maps">Open in Maps</string>
+    <string name="no_events_available">No events available</string>
+    <string name="please_try_again">Please try again!</string>
+    <string name="distance_away">%.1f km away</string>
+    <string name="go_back">Go back</string>
+    <string name="event_details_title">Event Details</string>
+    <string name="unable_to_load_event_details">Unable to load event details.</string>
+    <string name="about_this_event">About this event</string>
+    <string name="no_event_details_available">No event details available.</string>
+    <string name="loading">Loading</string>
+    <string name="back_to_events">Back to events</string>
+    <string name="bookmarked_events_title">Bookmarked Events</string>
+    <string name="no_bookmarked_events">No bookmarked events yet.</string>
 </resources>

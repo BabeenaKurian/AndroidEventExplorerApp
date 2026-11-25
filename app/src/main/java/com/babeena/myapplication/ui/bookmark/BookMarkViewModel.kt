@@ -16,7 +16,6 @@ import javax.inject.Inject
 class BookMarkViewModel @Inject constructor(
     private val bookmarkRepository: BookMarkRepository
 ) : ViewModel() {
-
     val bookmarkedEvents: StateFlow<List<Event>> =
         bookmarkRepository.getAllBookMarkedItems().stateIn(
             scope = viewModelScope,
