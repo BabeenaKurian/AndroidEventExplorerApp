@@ -2,6 +2,7 @@ package com.babeena.myapplication.data.repository
 
 import com.babeena.myapplication.data.remote.ApiResult
 import com.babeena.myapplication.data.remote.EventApiService
+import com.babeena.myapplication.data.remote.EventDetailsResult
 import com.babeena.myapplication.data.remote.EventDto
 import com.babeena.myapplication.domain.model.Event
 import com.babeena.myapplication.domain.repository.EventRepository
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import kotlin.compareTo
+import kotlin.coroutines.cancellation.CancellationException
 
 class EventRepositoryImpl @Inject constructor(
     private val eventApiService: EventApiService,): EventRepository {
@@ -26,6 +28,28 @@ class EventRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
                 ApiResult.Failure(e.message ?: "Unable to load data...")
+        }
+    }
+
+    override suspend fun getEventDetails(id: String): EventDetailsResult {
+
+        return try {
+            val eventDto = eventApiService.getEventDetails(id)
+
+            val event = eventDto?.toEventOrNull()
+
+            if (event != null) {
+                EventDetailsResult.Success(event)
+            } else {
+                EventDetailsResult.Failure("Event details not available")
+            }
+
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            EventDetailsResult.Failure(
+                e.message ?: "Unable to get event details"
+            )
         }
     }
 
