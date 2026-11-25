@@ -1,5 +1,7 @@
 package com.babeena.myapplication.data.repository
 
+import com.babeena.myapplication.data.local.EventDao
+import com.babeena.myapplication.data.local.EventEntity
 import com.babeena.myapplication.data.remote.ApiResult
 import com.babeena.myapplication.data.remote.EventApiService
 import com.babeena.myapplication.data.remote.EventDetailsResult
@@ -14,7 +16,8 @@ import kotlin.compareTo
 import kotlin.coroutines.cancellation.CancellationException
 
 class EventRepositoryImpl @Inject constructor(
-    private val eventApiService: EventApiService,): EventRepository {
+    private val eventApiService: EventApiService,
+    val eventDao: EventDao,): EventRepository {
 
     override suspend fun getAllEvents(): ApiResult {
 
@@ -24,10 +27,18 @@ class EventRepositoryImpl @Inject constructor(
             val events = response.mapNotNull { dto ->
                 dto?.toEventOrNull()
             }
+            eventDao.replaceAllEvents(
+                events.map { it.toEntity() }
+            )
             ApiResult.Success(events)
 
         } catch (e: Exception) {
+            val cachedEvents = eventDao.getAllEvents().first()
+            if (cachedEvents.isNotEmpty()) {
+                ApiResult.Success(cachedEvents.map { it.toEvent() })
+            } else {
                 ApiResult.Failure(e.message ?: "Unable to load data...")
+            }
         }
     }
 
@@ -35,9 +46,7 @@ class EventRepositoryImpl @Inject constructor(
 
         return try {
             val eventDto = eventApiService.getEventDetails(id)
-
             val event = eventDto?.toEventOrNull()
-
             if (event != null) {
                 EventDetailsResult.Success(event)
             } else {
@@ -54,9 +63,7 @@ class EventRepositoryImpl @Inject constructor(
     }
 
     private fun EventDto.toEventOrNull(): Event? {
-
         val eventId = id.toSafeString() ?: return null
-
         val eventTitle = title
             ?.takeIf { it.isNotBlank() }
             ?: return null
@@ -72,6 +79,29 @@ class EventRepositoryImpl @Inject constructor(
             description = description
         )
     }
+
+    private fun Event.toEntity() =
+        EventEntity(
+            id = id,
+            title = title,
+            location = location,
+            dateTime = dateTime,
+            imageUrl = imageUrl,
+            latitude = latitude,
+            longitude = longitude,
+            description = description
+        )
+
+    private fun EventEntity.toEvent() = Event(
+        id = id,
+        title = title,
+        location = location,
+        dateTime = dateTime,
+        imageUrl = imageUrl,
+        latitude = latitude,
+        longitude = longitude,
+        description = description
+    )
 
     private fun JsonElement?.toSafeString(): String? {
         if (this == null || isJsonNull) return null
