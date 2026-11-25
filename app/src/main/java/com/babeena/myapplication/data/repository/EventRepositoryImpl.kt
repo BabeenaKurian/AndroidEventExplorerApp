@@ -82,6 +82,22 @@ class EventRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun syncEvents() {
+        val response = eventApiService.getAllEvents()?: return
+
+        val events = response.mapNotNull { dto ->
+            dto?.toEventOrNull()
+        }
+
+        eventDao.replaceAllEvents(
+            events.map { it.toEntity() }
+        )
+
+        cacheTimestampStore.saveLastFetchTime(
+            System.currentTimeMillis()
+        )
+    }
+
     private fun EventDto.toEventOrNull(): Event? {
 
         val eventId = id.toSafeString() ?: return null

@@ -8,5 +8,7 @@ interface EventRepository {
 
     suspend fun getEventDetails(id: String): EventDetailsResult
 
+    suspend fun syncEvents()
+
 
 }

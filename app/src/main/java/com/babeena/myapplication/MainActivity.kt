@@ -12,10 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.babeena.myapplication.navigation.navGraph
 import com.babeena.myapplication.ui.events.EventViewModel
 import com.babeena.myapplication.ui.events.eventScreen
 import com.babeena.myapplication.ui.theme.MyApplicationTheme
+import com.babeena.myapplication.worker.EventSyncWorker
 import dagger.hilt.EntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -30,5 +33,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+/*
+    private fun testEventSync() {
+        val request = OneTimeWorkRequestBuilder<EventSyncWorker>()
+            .build()
+
+        WorkManager.getInstance(applicationContext)
+            .enqueue(request)
+    }*/
     }
 
