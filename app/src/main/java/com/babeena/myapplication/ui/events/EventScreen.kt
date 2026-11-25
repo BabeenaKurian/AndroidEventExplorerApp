@@ -54,6 +54,7 @@ import com.babeena.myapplication.utils.EventDateUtils.formatEventDate
 @Composable
 fun eventScreen(
     viewModel: EventViewModel,
+    onEventClick: (String) -> Unit
 ) {
 
     val eventUiState by viewModel.eventUiState.collectAsStateWithLifecycle()
@@ -175,6 +176,9 @@ fun eventScreen(
                                                     horizontal = 16.dp,
                                                     vertical = 8.dp
                                                 ),
+                                            onClick = {
+                                                onEventClick(event.id)
+                                            },
                                             shape = RoundedCornerShape(20.dp),
                                             colors = CardDefaults.cardColors(
                                                 containerColor =

@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.babeena.myapplication.navigation.navGraph
 import com.babeena.myapplication.ui.events.EventViewModel
 import com.babeena.myapplication.ui.events.eventScreen
 import com.babeena.myapplication.ui.theme.MyApplicationTheme
@@ -20,13 +21,12 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    val viewModel: EventViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                eventScreen(viewModel)
+                navGraph()
                 }
             }
         }
