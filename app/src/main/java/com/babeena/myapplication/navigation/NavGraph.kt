@@ -12,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.babeena.myapplication.ui.bookmark.BookMarkViewModel
+import com.babeena.myapplication.ui.bookmark.bookMarkScreen
 import com.babeena.myapplication.ui.details.DetailsViewModel
 import com.babeena.myapplication.ui.details.detailsScreen
 import com.babeena.myapplication.ui.events.EventViewModel
@@ -47,6 +49,9 @@ fun navGraph() {
                     viewModel = eventViewModel,
                     onEventClick = { eventId ->
                         navController.navigate("eventDetails/$eventId")
+                    },
+                    onBookmarksClick = {
+                        navController.navigate("bookmarks")
                     })
             }
 
@@ -83,6 +88,20 @@ fun navGraph() {
                 detailsScreen(
                     viewModel = detailsViewModel,
                     userLocation = userLocation,
+                    onBackClick = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
+            composable("bookmarks") {
+                val viewModel: BookMarkViewModel = hiltViewModel()
+
+                bookMarkScreen(
+                    viewModel = viewModel,
+                    onEventClick = { eventId ->
+                        navController.navigate("eventDetails/$eventId")
+                    },
                     onBackClick = {
                         navController.popBackStack()
                     }

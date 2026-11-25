@@ -56,7 +56,8 @@ import com.babeena.myapplication.utils.EventDateUtils.formatEventDate
 @Composable
 fun eventScreen(
     viewModel: EventViewModel,
-    onEventClick: (String) -> Unit
+    onEventClick: (String) -> Unit,
+    onBookmarksClick:() -> Unit
 ) {
 
     val eventUiState by viewModel.eventUiState.collectAsStateWithLifecycle()
@@ -130,6 +131,9 @@ fun eventScreen(
                         text = "Events List",
                         style = MaterialTheme.typography.headlineSmall
                     )
+                    TextButton(onClick = onBookmarksClick) {
+                        Text("Bookmarks")
+                    }
                 }
                 when {
 
