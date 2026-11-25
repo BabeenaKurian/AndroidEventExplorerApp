@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">Local Event Explorer</string>
     <string name="events_list_title">Events List</string>
     <string name="bookmarks">Bookmarks</string>
     <string name="date_not_available">Date not available</string>
